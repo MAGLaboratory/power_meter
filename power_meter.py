@@ -18,8 +18,9 @@ class POWER(mqtt.Client):
     @dataclass
     class config:
         name: str
-        short_name: str
+        mqtt_prefix: str
         description: str
+        ll_name: str
         # long_checkup_freq: int
         mqtt_broker: str
         mqtt_port: int
@@ -75,8 +76,12 @@ class POWER(mqtt.Client):
         checks = {}
         # copy the data from the input set to the output
         for idx in range(len(self.config.reg_config)):
-            if self.config.reg_config[idx][1] == 2:
-                checks[self.config.short_name + "_" + self.config.reg_config[idx][0]] = self.mbReg[idx]
+            if self.config.reg_config[idx][1] & 2:
+                checks[self.config.mqtt_prefix + "_" + self.config.reg_config[idx][0]] = self.mbReg[idx]
+
+            if self.config.reg_config[idx][1] & 4:
+                data = format(self.mbReg[idx], ".3f")
+                self.publish(self.config.ll_name+"/"+self.config.reg_config[idx][0], data)
 
         self.notify('checkup', checks)
 
@@ -134,8 +139,8 @@ class POWER(mqtt.Client):
 
         runData = {}
         for idx in range(len(self.config.reg_config)):
-            if self.config.reg_config[idx][1] == 1:
-                runData[self.config.short_name + "_" + self.config.reg_config[idx][0]] = self.mbReg[idx]
+            if self.config.reg_config[idx][1] & 1:
+                runData[self.config.mqtt_prefix + "_" + self.config.reg_config[idx][0]] = self.mbReg[idx]
 
         self.notify('run', runData);
 
@@ -162,9 +167,14 @@ class POWER(mqtt.Client):
         except (KeyError, AttributeError) as e:
             logging.warning("Log level not configured.  Defaulting to WARNING.  Caught: " + str(e))
         if self.config.mqtt_max_loop_reconnect < 1:
-            logging.warning("MQTT maximum reconnect tries can not be less than 1.")
+            logging.error("MQTT maximum reconnect tries can not be less than 1.")
+            exit(1)
         if self.config.mqtt_max_startup < 1:
-            logging.warning("MQTT maximum startup count can not be less than 1.")
+            logging.error("MQTT maximum startup count can not be less than 1.")
+            exit(1)
+        if self.config.mqtt_max_reconnects < 1:
+            logging.error("MQTT maximum reconnect count can not be less than 1.")
+            exit(1)
 
         while startup_count < self.config.mqtt_max_startup:
             try:
@@ -186,7 +196,7 @@ class POWER(mqtt.Client):
 
         if startup_count >= self.config.mqtt_max_startup:
             logging.critical("Too many startup tries.  Exiting.")
-            os._exit(1)
+            exit(1)
 
         logging.info("Startup success.")
         reconnect_flag = False

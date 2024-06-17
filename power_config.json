@@ -1,7 +1,8 @@
 {
 	"name": "power",
-	"short_name": "PWR",
+	"mqtt_prefix": "PWR",
 	"description": "This is the power meter configuration file.",
+	"ll_name": "p_ev",
 	"mqtt_broker": "hal",
 	"mqtt_port": 1883,
 	"mqtt_timeout": 60,
@@ -109,7 +110,7 @@
 		["_Reserved_55", 0],
 		["L1_L2_V", 0],
 		["L2_L3_V", 0],
-		["L3_L1_V", 0],
+		["L3_L1_V", 4],
 		["Avg_LL_V", 0],
 		["_Reserved_56", 0],
 		["_Reserved_57", 0],
