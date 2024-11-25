@@ -1,0 +1,13 @@
+[Unit]
+Description=MAG Laboratory Power Meter
+
+[Service]
+User=brandon
+Group=brandon
+Restart=on-failure
+RestartSec=30s
+EnvironmentFile=/home/brandon/power_meter/power_meter.env
+ExecStart=/home/brandon/power_meter/power_meter.py
+
+[Install]
+WantedBy=multi-user.target
